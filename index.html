@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Train Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app" class="py-3">
+        <div class="pb-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-light" @click="toggle_chart">{{toggle_text}}</button>
+                        <button class="btn btn-light ml-3" @click="sort_chart">{{sort_text}}</button>
+                    </div>
+                    <div class="col">
+                        <div class="form-group row">
+                            <label for="files" class="col-2 col-form-label">Results : </label>
+                            <select class="form-control col-10" name="files" @change="changeFile">
+                                <option v-for="file in sources" :selected="file === current_file">{{ file }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chartWrapper" v-show="show_chart">
+                <div>
+                    <canvas id="chart_main" width="700px" height="100%"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="container" v-show="selected_train.date != ''">
+            <div class="row pb-3">
+                <div class="col-12">
+                    <h4 class="text-center">
+                        {{selected_title}} / {{selected_train.date}}
+                    </h4>
+
+                    <div class="text-right">
+                        <button class="btn btn-primary" @click="previous"><i class="fa fa-arrow-left"></i></button>
+                        <button class="btn btn-primary" @click="next"><i class="fa fa-arrow-right"></i></button>
+                        <button class="btn btn-danger" @click="remove"><i class="fa fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <canvas id="train-canvas" height="100%"></canvas>
+                </div>
+                <div class="col-6">
+                    <canvas id="val-canvas" height="100%"></canvas>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <h5 class="text-center mt-5">INPUTS</h5>
+                    <br>
+                    <div>
+                        <span v-if="selected_train.others.weights"><u>Weights:</u> <b>{{selected_train.others.weights}}</b>&nbsp;&nbsp;&nbsp;</span>
+                        <span v-if="selected_train.others.validation_split"><u>Validation Split:</u> <b>{{selected_train.others.validation_split}}</b>&nbsp;&nbsp;&nbsp;</span>
+                    </div>
+                    <br><span><u>Layers</u></span><br>
+                    <ul>
+                        <li v-for="item of selected_train.layers">
+                            <span v-for="(val, nam) in item" v-if="val">
+                                {{nam}}: <b>{{val}}</b>&nbsp;&nbsp;&nbsp;
+                            </span>
+                        </li>
+                    </ul>
+    
+    
+                    <div v-for="(value, name) in selected_train">
+                        <div class="row">
+                            <div v-if="name === 'optimizer' || name === 'params'">
+                                <br><span><u>{{name}}</u></span><br>
+                                <span v-for="(val, nam) in value">{{nam}}: <b>{{val}}</b>&nbsp;&nbsp;&nbsp;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <h5 class="text-center mt-5">OUTPUTS</h5>
+                    <br><span><u>Results</u></span><br>
+                    <span v-for="(value, nam) in selected_train.history">
+                        {{nam}}: <b>{{value[value.length-1]}}</b>&nbsp;&nbsp;&nbsp;
+                    </span>
+    
+                    <table v-if="selected_train.others.confusion_matrix" class="table table-bordered text-center mt-3">
+                        <thead>
+                        <tr>
+                            <th colspan="2" rowspan="2" class="align-middle">
+                                <span><u>Confusion Matrix</u></span>
+                            </th>
+                            <th colspan="2">Predicted</th>
+                        </tr>
+                        <tr>
+                            <th>Parasitized</th>
+                            <th>Uninfected</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th rowspan="2" class="align-middle">Actual</th>
+                            <th>Parasitized</th>
+                            <td class="table-success"><span v-html="selected_train.others.confusion_matrix[0][0]"></span>
+                            </td>
+                            <td class="table-danger"><span v-html="selected_train.others.confusion_matrix[0][1]"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Uninfected</th>
+                            <td class="table-danger"><span v-html="selected_train.others.confusion_matrix[1][0]"></span>
+                            </td>
+                            <td class="table-success"><span v-html="selected_train.others.confusion_matrix[1][1]"></span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+    
+                    <table v-if="selected_train.others.classification_report" class="table table-bordered text-center mt-3">
+                        <thead>
+                        <tr>
+                            <th>
+                                <u>Classification Report</u>
+                            </th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-score</th>
+                            <th>Support</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(value, name, index) in selected_train.others.classification_report">
+                            <th>{{name}}</th>
+                            <td>{{value["precision"]}}</td>
+                            <td>{{value["recall"]}}</td>
+                            <td v-if="name!=='accuracy'">{{value["f1-score"]}}</td>
+                            <td v-if="name==='accuracy'">{{value}}</td>
+                            <td>{{value["support"]}}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- development version, includes helpful console warnings -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script>
+        let chart_train, chart_val, chart_main;
+        const app = new Vue({
+            el: '#app',
+            data: {
+                sources: [],
+                current_file: '',
+                toggle_text: "Hide",
+                sort_text: "Sort By Accuracy",
+                show_chart: true,
+                list: [],
+                source_list: [],
+                selected_index: 0,
+                selected_title: '',
+                selected_train: {
+                    date: "",
+                    history: {},
+                    params: {},
+                    layers: [],
+                    input_shape: [],
+                    others: {}
+                }
+            },
+            methods: {
+                changeFile: function(e) {
+                    let file = e.target.value;
+                    location.href = '?file=' + file;
+                },
+                open: function (event) {
+                    selected_date = event.target.dataset.date
+                    item = app.list.filter(item => {
+                        return item.date == selected_date;
+                    })[0];
+                    console.log(item);
+
+                },
+                remove: function () {
+                    app.list.pop(app.selected_train);
+                    $.post('pop.php?f=' + this.current_file + '&d=' + app.selected_train.date).done(function () {
+                        location.reload();
+                    });
+                },
+                toggle_chart: function () {
+                    app.toggle_text = app.show_chart ? "Show" : "Hide";
+                    app.show_chart = !app.show_chart;
+                },
+                sort_chart: function () {
+                    let sorted_list = app.source_list.slice();
+                    if (app.sort_text == 'Sort By Accuracy') {
+                        sorted_list.sort(function (a, b) {
+                            let diff_acc = a.history.acc[a.history.acc.length - 1] - b.history.acc[b.history.acc.length - 1];
+                            let diff_loss = b.history.loss[b.history.loss.length - 1] - a.history.loss[a.history.loss.length - 1];
+                            return diff_acc == 0 ? diff_loss : diff_acc;
+                        });
+                        app.sort_text = 'Sort By Date';
+                    } else {
+                        app.sort_text = 'Sort By Accuracy';
+                    }
+                    app.list = sorted_list;
+
+                    let labels = [], accs = [], losss = [];
+                    for (let i = 0; i < app.list.length; i++) {
+                        const el = app.list[i];
+                        labels.push(el.layers[0].name);
+                        accs.push(el.history.acc[el.history.acc.length - 1]);
+                        losss.push(el.history.loss[el.history.loss.length - 1]);
+                    }
+
+                    app.updateMainChart(labels, accs, losss);
+                },
+                next: function () {
+                    if (app.selected_index == app.list.length - 1) {
+                        app.selected_index = -1;
+                    }
+                    app.selected_index += 1;
+                    app.selected_train = app.list[app.selected_index];
+                    app.updateCharts();
+                },
+                previous: function () {
+                    if (app.selected_index == 0) {
+                        app.selected_index = app.list.length;
+                    }
+                    app.selected_index -= 1;
+                    app.selected_train = app.list[app.selected_index];
+                    app.updateCharts();
+                },
+                updateCharts: function () {
+                    const el = app.list[app.selected_index];
+                    app.selected_title = el.layers[0].name;
+                    const epochs = [];
+                    for (let i = 1; i <= el.history.acc.length; i++) {
+                        epochs.push(i);
+                    }
+                    if (chart_train) chart_train.destroy();
+                    if (chart_val) chart_val.destroy();
+
+                    let canvas = document.getElementById('train-canvas');
+                    chart_train = new Chart(canvas, {
+                        type: 'line',
+                        data: {
+                            labels: epochs,
+                            datasets: [{
+                                label: '# Accuracy',
+                                data: el.history.acc,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+
+                                borderWidth: 1
+                            }, {
+                                label: '# Validation Accuracy',
+                                data: el.history.val_acc,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+                    canvas = document.getElementById('val-canvas');
+                    chart_val = new Chart(canvas, {
+                        type: 'line',
+                        data: {
+                            labels: epochs,
+                            datasets: [{
+                                label: '# Loss',
+                                data: el.history.loss,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: '# Validation Loss',
+                                data: el.history.val_loss,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+                },
+                updateMainChart: function (labels, accs, losss) {
+
+                    if (chart_main) chart_main.destroy();
+                    let ctx = document.getElementById('chart_main');
+                    chart_main = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '# Accuracies',
+                                data: accs,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: '# Losses',
+                                data: losss,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                }],
+                                xAxes: [{
+                                    ticks: {
+                                        autoSkip: false
+                                    }
+                                }]
+                            },
+                        }
+                    });
+                }
+            },
+            mounted() {
+                this.current_file = new URL(location.href).searchParams.get('file') ?? 'log_validations_splits';
+
+                $.getJSON('files.php').then(function (response) {
+                    app.sources = response;
+                });
+
+                window.addEventListener("keyup", e => {
+                    if (e.keyCode == 37) {
+                        app.previous();
+                    } else if (e.keyCode == 39) {
+                        app.next();
+                    }
+                });
+                
+                $.getJSON(this.current_file + '.json').then(function (response) {
+                    app.list = app.source_list = response;
+                    let labels = [];
+                    let accs = [];
+                    let losss = [];
+
+                    for (let i = 0; i < response.length; i++) {
+                        const el = response[i];
+                        let lbl = i + 1 + ".   " + el.layers[0].name.split('-')[1].toUpperCase();
+                        el.layers[0].name = lbl;
+                        labels.push(lbl);
+                        accs.push(el.history.acc[el.history.acc.length - 1]);
+                        losss.push(el.history.loss[el.history.loss.length - 1]);
+                    }
+
+                    app.updateMainChart(labels, accs, losss);
+
+                    document.getElementById('chart_main').onclick = function (evt) {
+                        const activePoint = chart_main.getElementAtEvent(evt)[0];
+                        const selected_index = activePoint._index;
+
+                        app.selected_index = selected_index;
+                        app.selected_train = app.list[selected_index];
+                        app.updateCharts();
+                    };
+                })
+            }
+        });
+    </script>
+
+</body>
+
+</html>
