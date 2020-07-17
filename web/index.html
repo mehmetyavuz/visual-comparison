@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html lang="en">
 
 <head>
@@ -340,11 +341,12 @@
                 }
             },
             mounted() {
-                this.current_file = new URL(location.href).searchParams.get('file') ?? 'log_validations_splits';
 
                 $.getJSON('files.php').then(function (response) {
                     app.sources = response;
                 });
+
+                this.current_file = new URL(location.href).searchParams.get('file') ?? 'sample_results';
 
                 window.addEventListener("keyup", e => {
                     if (e.keyCode == 37) {
