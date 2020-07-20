@@ -66,6 +66,7 @@
                     <h5 class="text-center mt-5">INPUTS</h5>
                     <br>
                     <div>
+                        <span v-if="selected_train.input_shape"><u>Input Shape:</u> <b>{{selected_train.input_shape}}</b>&nbsp;&nbsp;&nbsp;</span>
                         <span v-if="selected_train.others.weights"><u>Weights:</u> <b>{{selected_train.others.weights}}</b>&nbsp;&nbsp;&nbsp;</span>
                         <span v-if="selected_train.others.validation_split"><u>Validation Split:</u> <b>{{selected_train.others.validation_split}}</b>&nbsp;&nbsp;&nbsp;</span>
                     </div>
