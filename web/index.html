@@ -25,8 +25,8 @@
                     </div>
                     <div class="col">
                         <div class="form-group row">
-                            <label for="files" class="col-2 col-form-label">Results : </label>
-                            <select class="form-control col-10" name="files" @change="changeFile">
+                            <label for="files" class="col-3 col-form-label">Sonuç Setleri : </label>
+                            <select class="form-control col-9" name="files" @change="changeFile">
                                 <option v-for="file in sources" :selected="file === current_file">{{ file }}</option>
                             </select>
                         </div>
@@ -63,14 +63,14 @@
             </div>
             <div class="row">
                 <div class="col-6">
-                    <h5 class="text-center mt-5">INPUTS</h5>
+                    <h5 class="text-center mt-5">Girdiler</h5>
                     <br>
                     <div>
-                        <span v-if="selected_train.input_shape"><u>Input Shape:</u> <b>{{selected_train.input_shape}}</b>&nbsp;&nbsp;&nbsp;</span>
-                        <span v-if="selected_train.others.weights"><u>Weights:</u> <b>{{selected_train.others.weights}}</b>&nbsp;&nbsp;&nbsp;</span>
-                        <span v-if="selected_train.others.validation_split"><u>Validation Split:</u> <b>{{selected_train.others.validation_split}}</b>&nbsp;&nbsp;&nbsp;</span>
+                        <span v-if="selected_train.input_shape"><u>Çözünürlük:</u> <b>{{selected_train.input_shape}}</b>&nbsp;&nbsp;&nbsp;</span>
+                        <span v-if="selected_train.others.weights"><u>Giriş Ağırlıkları:</u> <b>{{selected_train.others.weights}}</b>&nbsp;&nbsp;&nbsp;</span><br>
+                        <span v-if="selected_train.others.validation_split"><u>Doğrulama Seti:</u> <b>{{selected_train.others.validation_split}}</b>&nbsp;&nbsp;&nbsp;</span>
                     </div>
-                    <br><span><u>Layers</u></span><br>
+                    <br><span><u>Katmanlar</u></span><br>
                     <ul>
                         <li v-for="item of selected_train.layers">
                             <span v-for="(val, nam) in item" v-if="val">
@@ -90,8 +90,8 @@
                     </div>
                 </div>
                 <div class="col-6">
-                    <h5 class="text-center mt-5">OUTPUTS</h5>
-                    <br><span><u>Results</u></span><br>
+                    <h5 class="text-center mt-5">Çıktılar</h5>
+                    <br><span><u>Eğitim Sounuçları</u></span><br>
                     <span v-for="(value, nam) in selected_train.history">
                         {{nam}}: <b>{{value[value.length-1]}}</b>&nbsp;&nbsp;&nbsp;
                     </span>
@@ -100,26 +100,26 @@
                         <thead>
                         <tr>
                             <th colspan="2" rowspan="2" class="align-middle">
-                                <span><u>Confusion Matrix</u></span>
+                                <span><u>Karışıklık Matrisi (Confusion Matrix)</u></span>
                             </th>
-                            <th colspan="2">Predicted</th>
+                            <th colspan="2">Öngörülen / Tahmin Edilen</th>
                         </tr>
                         <tr>
-                            <th>Parasitized</th>
-                            <th>Uninfected</th>
+                            <th>Enfekte</th>
+                            <th>Sağlıklı</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <th rowspan="2" class="align-middle">Actual</th>
-                            <th>Parasitized</th>
+                            <th rowspan="2" class="align-middle">Asıl / Gerçek</th>
+                            <th>Enfekte</th>
                             <td class="table-success"><span v-html="selected_train.others.confusion_matrix[0][0]"></span>
                             </td>
                             <td class="table-danger"><span v-html="selected_train.others.confusion_matrix[0][1]"></span>
                             </td>
                         </tr>
                         <tr>
-                            <th>Uninfected</th>
+                            <th>Sağlıklı</th>
                             <td class="table-danger"><span v-html="selected_train.others.confusion_matrix[1][0]"></span>
                             </td>
                             <td class="table-success"><span v-html="selected_train.others.confusion_matrix[1][1]"></span>
@@ -132,12 +132,12 @@
                         <thead>
                         <tr>
                             <th>
-                                <u>Classification Report</u>
+                                <u>Sınıflandırma Raporu</u>
                             </th>
-                            <th>Precision</th>
-                            <th>Recall</th>
-                            <th>F1-score</th>
-                            <th>Support</th>
+                            <th>Hassasiyet</th>
+                            <th>Duyarlılık</th>
+                            <th>F1 Puanı</th>
+                            <th>Destek ? (Support)</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -171,8 +171,8 @@
             data: {
                 sources: [],
                 current_file: '',
-                toggle_text: "Hide",
-                sort_text: "Sort By Accuracy",
+                toggle_text: "Gizle",
+                sort_text: "Doğruluğa Göre Sırala",
                 show_chart: true,
                 list: [],
                 source_list: [],
@@ -207,20 +207,20 @@
                     });
                 },
                 toggle_chart: function () {
-                    app.toggle_text = app.show_chart ? "Show" : "Hide";
+                    app.toggle_text = app.show_chart ? "Göster" : "Gizle";
                     app.show_chart = !app.show_chart;
                 },
                 sort_chart: function () {
                     let sorted_list = app.source_list.slice();
-                    if (app.sort_text == 'Sort By Accuracy') {
+                    if (app.sort_text == 'Doğruluğa Göre Sırala') {
                         sorted_list.sort(function (a, b) {
                             let diff_acc = a.history.acc[a.history.acc.length - 1] - b.history.acc[b.history.acc.length - 1];
                             let diff_loss = b.history.loss[b.history.loss.length - 1] - a.history.loss[a.history.loss.length - 1];
                             return diff_acc == 0 ? diff_loss : diff_acc;
                         });
-                        app.sort_text = 'Sort By Date';
+                        app.sort_text = 'Kronolojik Sırala';
                     } else {
-                        app.sort_text = 'Sort By Accuracy';
+                        app.sort_text = 'Doğruluğa Göre Sırala';
                     }
                     app.list = sorted_list;
 
@@ -266,14 +266,14 @@
                         data: {
                             labels: epochs,
                             datasets: [{
-                                label: '# Accuracy',
+                                label: '# Doğruluk',
                                 data: el.history.acc,
                                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
 
                                 borderWidth: 1
                             }, {
-                                label: '# Validation Accuracy',
+                                label: '# Geçerleme ? Doğrulama Doğruluğu',
                                 data: el.history.val_acc,
                                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                                 borderColor: 'rgba(255, 99, 132, 1)',
@@ -287,13 +287,13 @@
                         data: {
                             labels: epochs,
                             datasets: [{
-                                label: '# Loss',
+                                label: '# Kayıp',
                                 data: el.history.loss,
                                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1
                             }, {
-                                label: '# Validation Loss',
+                                label: '# Doğrulama Kaybı',
                                 data: el.history.val_loss,
                                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                                 borderColor: 'rgba(255, 99, 132, 1)',
@@ -311,13 +311,13 @@
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: '# Accuracies',
+                                label: '# Doğruluk',
                                 data: accs,
                                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1
                             }, {
-                                label: '# Losses',
+                                label: '# Kayıp',
                                 data: losss,
                                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                                 borderColor: 'rgba(255, 99, 132, 1)',
