@@ -102,7 +102,7 @@
                             <th colspan="2" rowspan="2" class="align-middle">
                                 <span><u>Karışıklık Matrisi (Confusion Matrix)</u></span>
                             </th>
-                            <th colspan="2">Öngörülen / Tahmin Edilen</th>
+                            <th colspan="2">Tahmin Edilen</th>
                         </tr>
                         <tr>
                             <th>Enfekte</th>
@@ -111,7 +111,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <th rowspan="2" class="align-middle">Asıl / Gerçek</th>
+                            <th rowspan="2" class="align-middle">Gerçek</th>
                             <th>Enfekte</th>
                             <td class="table-success"><span v-html="selected_train.others.confusion_matrix[0][0]"></span>
                             </td>
@@ -273,7 +273,7 @@
 
                                 borderWidth: 1
                             }, {
-                                label: '# Geçerleme ? Doğrulama Doğruluğu',
+                                label: '# Doğrulama Doğruluğu',
                                 data: el.history.val_acc,
                                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                                 borderColor: 'rgba(255, 99, 132, 1)',
